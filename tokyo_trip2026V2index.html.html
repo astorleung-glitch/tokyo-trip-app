@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>東京終極 AI 行程管家</title>
+    <style>
+        :root {
+            --primary-color: #FFB7C5; 
+            --secondary-color: #E8F1F2;
+            --accent-color: #d86c81;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --bg-color: #F8F9FA;
+            --white: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-dark); padding-bottom: 80px; }
+
+        header {
+            background: linear-gradient(135deg, #FFB7C5 0%, #FF9EAE 100%);
+            color: var(--white); padding: 30px 20px 20px; text-align: center;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container { padding: 15px; max-width: 800px; margin: 0 auto; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background-color: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; color: var(--accent-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 8px; }
+
+        .timeline-item { margin-bottom: 15px; padding: 12px; border-radius: 10px; background: #fff; border: 1px solid #eee; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: 0.3s; }
+        .dest-header { display: flex; justify-content: space-between; align-items: center; }
+        
+        .editable { border-bottom: 1px dashed #ccc; cursor: text; outline: none; transition: background-color 0.5s ease; }
+        .editable:focus { border-bottom: 1px solid var(--accent-color); background-color: #fff0f3; padding: 2px; border-radius: 3px; }
+        
+        .time { font-weight: bold; color: var(--accent-color); font-size: 1.1rem; border-radius: 4px;}
+        .dest-content { display: flex; gap: 12px; flex-wrap: wrap; }
+        .dest-info { flex: 1; min-width: 200px; }
+        .event { font-size: 1.1rem; font-weight: bold; margin-bottom: 4px; color: #2d3436; }
+        .detail { font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px; line-height: 1.5; }
+
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+        .btn { padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; color: #fff;}
+        .btn-map { background-color: #0984e3; }
+        .btn-replace { background-color: #e17055; }
+        .btn-add { background-color: #00b894; }
+        .btn-remove { background-color: #d63031; }
+        .btn-ai { background-color: #6c5ce7; }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+
+        /* 交通選項全新 UI */
+        .transit-box { margin-top: 8px; background: var(--secondary-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; }
+        .btn-transit { width: 100%; background: #dfe6e9; color: #2d3436; padding: 8px; border-radius: 6px; text-align: center; border: 1px dashed #b2bec3; cursor: pointer; font-weight: bold; margin-bottom: 5px;}
+        .btn-transit:hover { background: #b2bec3; }
+        .transit-result { display: none; margin-top: 10px; }
+        
+        /* 多重路線卡片 */
+        .route-options-container { display: flex; flex-direction: column; gap: 8px; }
+        .route-card { border: 1px solid #b2bec3; border-radius: 6px; padding: 10px; cursor: pointer; background: #fff; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .route-card:hover { border-color: #0984e3; background: #f0f8ff; }
+        .route-card.selected { border-color: #00b894; background: #e8f8f5; border-width: 2px; }
+        .route-info { display: flex; flex-direction: column; gap: 4px; }
+        .route-title { font-weight: bold; color: #2d3436; font-size: 0.95rem; }
+        .route-details { font-size: 0.8rem; color: #636e72; }
+        .eta-result { margin-top: 10px; display: none; color: #d63031; font-weight: bold; padding-left: 5px; border-left: 3px solid #d63031; line-height: 1.4;}
+
+        .ai-recommendation { display: none; background: #f0f0ff; border-left: 3px solid #6c5ce7; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.85rem; color: #333; line-height: 1.6; }
+
+        /* 懸浮安插按鈕 */
+        .fab-ai { position: fixed; bottom: 90px; right: 20px; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border: none; border-radius: 50px; padding: 12px 20px; font-size: 0.95rem; font-weight: bold; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4); cursor: pointer; z-index: 999; display: flex; align-items: center; gap: 6px; transition: 0.2s;}
+        .fab-ai:active { transform: scale(0.9); }
+
+        ul.info-list { list-style: none; margin-left: 0; }
+        ul.info-list li { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; line-height: 1.5;}
+        ul.info-list li::before { content: "🌸 "; }
+
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--white); display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-light); font-size: 0.75rem; cursor: pointer; }
+        .nav-item.active { color: var(--accent-color); transform: translateY(-3px); font-weight: bold;}
+        .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🗼 東京終極 AI 行程管家</h1>
+        <p>動態時間推算 x 智能安插</p>
+    </header>
+
+    <div class="container">
+        
+        <div id="tab-itinerary" class="tab-content active">
+            <div style="margin-bottom: 15px; font-size: 0.85rem; color: #666; text-align: center; background: #fff0f3; padding: 10px; border-radius: 8px;">
+                💡 <b>使用提示：</b>時間可隨意修改！點擊交通計算時，系統會<b>抓取您最新修改的時間</b>來精準推算下一站抵達時刻。
+            </div>
+            <div id="itinerary-container"></div>
+        </div>
+
+        <div id="tab-transport" class="tab-content">
+            <div class="card">
+                <div class="card-title">機場往返市區</div>
+                <p><strong>🚄 京成電鐵 Skyliner</strong></p>
+                <p class="detail">去程：5/21 成田T2 ➔ 京成上野 (約45分)</p>
+                <p class="detail">回程：5/25 京成上野 ➔ 成田T2 (約45分)</p>
+            </div>
+            <div class="card">
+                <div class="card-title">市區大眾運輸指南</div>
+                <ul class="info-list">
+                    <li><b>支付方式：</b>強力推薦將 Suica 綁定於 Apple Pay 或 Google Wallet。</li>
+                    <li><b>銀座線 (橘色)：</b>連接上野、淺草、銀座、表參道、澀谷。</li>
+                    <li><b>日比谷線 (銀色)：</b>連接上野、麻布台之丘、六本木、銀座。</li>
+                    <li><b>JR 山手線 (綠色)：</b>環狀線，連接上野與新宿。</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="tab-hotel" class="tab-content">
+            <div class="card">
+                <div class="card-title">飯店詳細資訊</div>
+                <p style="font-size: 1.1rem; font-weight: bold; color:#2d3436;">HOTEL MYSTAYS Ueno East</p>
+                <p class="detail">上野東 MYSTAYS 酒店</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <ul class="info-list">
+                    <li><b>入住：</b>2026/5/21 (四) 15:00 後</li>
+                    <li><b>退房：</b>2026/5/25 (一) 11:00 前</li>
+                    <li><b>地址：</b>5 Chome-5-13 Higashiueno, Taito City, Tokyo 110-0015</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="tab-budget" class="tab-content">
+            <div class="card">
+                <div class="card-title">綜合預算概估 (2人同行)</div>
+                <p><strong>總預算：10,000 HKD (約 200,000 JPY)</strong></p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <div style="margin-top: 15px; background:#e8f1f2; padding:10px; border-radius:8px;">
+                    <p style="font-weight: bold; color: #d86c81; font-size: 1.1rem; text-align:center;">
+                        預估總花費：162,500 JPY<br>
+                        剩餘彈性基金：37,500 JPY
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fab-ai" onclick="smartFitSchedule()">
+        <span>🤖</span> 安插新景點
+    </button>
+
+    <nav>
+        <div class="nav-item active" onclick="switchTab('itinerary', this)"><div class="nav-icon">📅</div><div>行程</div></div>
+        <div class="nav-item" onclick="switchTab('transport', this)"><div class="nav-icon">🚃</div><div>交通</div></div>
+        <div class="nav-item" onclick="switchTab('hotel', this)"><div class="nav-icon">🏨</div><div>住宿</div></div>
+        <div class="nav-item" onclick="switchTab('budget', this)"><div class="nav-icon">💰</div><div>預算</div></div>
+    </nav>
+
+    <script>
+        // 資料結構保持不變
+        let tripData = [
+            {
+                dayId: "day1", title: "Day 1：5/21 (四) 抵達與下町悠遊",
+                items: [
+                    { id: "1-1", time: "14:50", event: "抵達成田機場 (NRT T2)", detail: "大灣區航空 HB320。入境拿行李。" },
+                    { id: "1-2", time: "17:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理 Check-in，放下行李。" },
+                    { id: "1-3", time: "17:30", event: "上野夾娃娃機", detail: "阿美橫町周邊娛樂。" },
+                    { id: "1-4", time: "18:45", event: "OS Drug 淺草店", detail: "購買藥妝，記得帶現金。" },
+                    { id: "1-5", time: "19:30", event: "淺草/上野超市大採買", detail: "買和牛、生魚片、杯麵。" },
+                    { id: "1-6", time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店享用大餐與休息。" }
+                ]
+            },
+            {
+                dayId: "day2", title: "Day 2：5/22 (五) 麻布台與新宿",
+                items: [
+                    { id: "2-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { id: "2-2", time: "11:00", event: "麵 みつヰ (或上野拉麵)", detail: "早午餐吃拉麵。" },
+                    { id: "2-3", time: "14:00", event: "鮨麻布 東京", detail: "麻布台之丘 Omakase 午餐。" },
+                    { id: "2-4", time: "15:45", event: "Afternoon Tea LOVE&TABLE", detail: "表參道吃水果可麗餅。" },
+                    { id: "2-5", time: "18:00", event: "森美術館 Mori Art Museum", detail: "六本木看展與夜景。" },
+                    { id: "2-6", time: "20:30", event: "七代目松五郎 涮涮鍋", detail: "新宿東宝ビル店吃晚餐。" },
+                    { id: "2-7", time: "22:00", event: "新宿逛街 (唐吉訶德)", detail: "歌舞伎町周邊採買。" },
+                    { id: "2-8", time: "23:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
+                ]
+            },
+            {
+                dayId: "day3", title: "Day 3：5/23 (六) 銀座奢華與高空景觀",
+                items: [
+                    { id: "3-1", time: "10:30", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { id: "3-2", time: "11:30", event: "金のダイニング 鮪金", detail: "銀座海鮮 Omakase。" },
+                    { id: "3-3", time: "13:30", event: "銀座步行者天國", detail: "Ginza Six、三越逛街。" },
+                    { id: "3-4", time: "16:00", event: "Hills House Dining 33", detail: "麻布台之丘法式午茶/晚餐。" },
+                    { id: "3-5", time: "19:30", event: "麺や 七彩 (八丁堀)", detail: "備案宵夜：喜多方拉麵。" },
+                    { id: "3-6", time: "21:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
+                ]
+            },
+            {
+                dayId: "day4", title: "Day 4：5/24 (日) 龍蝦堡與老饕拉麵",
+                items: [
+                    { id: "4-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { id: "4-2", time: "11:00", event: "Luke's Lobster 新宿", detail: "大啖龍蝦堡。" },
+                    { id: "4-3", time: "13:00", event: "澀谷 SKY / 原宿逛街", detail: "可吃 HARBS 千層蛋糕。" },
+                    { id: "4-4", time: "18:30", event: "中華蕎麦 無冠 (五反田)", detail: "特製牡蠣塩拉麵。" },
+                    { id: "4-5", time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店整理行李。" }
+                ]
+            },
+            {
+                dayId: "day5", title: "Day 5：5/25 (一) 採買與賦歸",
+                items: [
+                    { id: "5-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理退房，寄放行李。" },
+                    { id: "5-2", time: "10:30", event: "阿美橫町最後採買", detail: "買零食、吃上野定食。" },
+                    { id: "5-3", time: "12:30", event: "搭乘 Skyliner", detail: "前往成田機場。" },
+                    { id: "5-4", time: "14:00", event: "抵達成田機場", detail: "逛免稅店。" },
+                    { id: "5-5", time: "15:50", event: "大灣區航空 HB321 起飛", detail: "滿載而歸！" }
+                ]
+            }
+        ];
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            element.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function getMapLink(query) { return `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(query)}`; }
+
+        function renderItinerary() {
+            const container = document.getElementById('itinerary-container');
+            container.innerHTML = '';
+
+            tripData.forEach((day, dayIndex) => {
+                let dayHTML = `<div class="card" id="${day.dayId}">
+                                <div class="card-title">${day.title}</div>`;
+                
+                day.items.forEach((item, itemIndex) => {
+                    dayHTML += `
+                    <div class="timeline-item" data-day="${dayIndex}" data-item="${itemIndex}">
+                        <div class="dest-header">
+                            <span class="time editable" contenteditable="true">${item.time}</span>
+                        </div>
+                        <div class="dest-content">
+                            <div class="dest-info">
+                                <div class="event editable" contenteditable="true">${item.event}</div>
+                                <div class="detail editable" contenteditable="true">${item.detail}</div>
+                                <div class="action-buttons">
+                                    <a href="${getMapLink(item.event)}" target="_blank" class="btn btn-map">📍地圖</a>
+                                    <button class="btn btn-replace" onclick="handleAction('replace', ${dayIndex}, ${itemIndex})">🔄替換</button>
+                                    <button class="btn btn-add" onclick="handleAction('add', ${dayIndex}, ${itemIndex})">➕新增</button>
+                                    <button class="btn btn-remove" onclick="handleAction('remove', ${dayIndex}, ${itemIndex})">❌刪除</button>
+                                    <button class="btn btn-ai" onclick="toggleAI(this, '${item.event}')">🤖周邊</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ai-recommendation"></div>
+                        
+                        ${itemIndex < day.items.length - 1 ? `
+                        <div class="transit-box">
+                            <div class="btn-transit" onclick="calcTransit(this, '${item.event}', '${day.items[itemIndex+1].event}', ${dayIndex}, ${itemIndex+1})">
+                                🚃 計算前往「${day.items[itemIndex+1].event}」的選項
+                            </div>
+                            <div class="transit-result"></div>
+                        </div>` : ''}
+                    </div>`;
+                });
+                dayHTML += `</div>`;
+                container.innerHTML += dayHTML;
+            });
+        }
+
+        function handleAction(action, dayIdx, itemIdx) {
+            let day = tripData[dayIdx];
+            if (action === 'remove') {
+                if(confirm("確定要刪除這個行程嗎？")) {
+                    day.items.splice(itemIdx, 1);
+                    renderItinerary();
+                }
+            } else if (action === 'replace') {
+                let newVal = prompt("請輸入新景點/餐廳名稱：");
+                if(newVal) {
+                    day.items[itemIdx].event = newVal;
+                    day.items[itemIdx].detail = "AI 已更新地點，請手動調整細節。";
+                    renderItinerary();
+                }
+            } else if (action === 'add') {
+                let newVal = prompt("請輸入要新增的景點名稱：");
+                if(newVal) {
+                    day.items.splice(itemIdx + 1, 0, { id: Date.now().toString(), time: "待定", event: newVal, detail: "手動新增的行程。" });
+                    renderItinerary();
+                }
+            }
+        }
+
+        function toggleAI(btn, eventName) {
+            let aiBox = btn.closest('.timeline-item').querySelector('.ai-recommendation');
+            if(aiBox.style.display === "block") { aiBox.style.display = "none"; return; }
+            aiBox.style.display = "block";
+            aiBox.innerHTML = "<em>🤖 正在掃描在地數據...</em>";
+            setTimeout(() => {
+                aiBox.innerHTML = `<strong>在地人推薦「${eventName}」周邊：</strong><br>
+                1. 附近高評價隱藏咖啡廳 <a href="${getMapLink(eventName + ' 咖啡廳')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a><br>
+                2. 巷弄高CP值日式定食 <a href="${getMapLink(eventName + ' 定食')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a><br>
+                3. 熱門拍照打卡秘境 <a href="${getMapLink(eventName + ' 景點')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a>`;
+            }, 600);
+        }
+
+        // --- 全新動態智慧安插功能 (Smart Fit) ---
+        function smartFitSchedule() {
+            let dest = prompt("想加入哪個新景點或餐廳？\n(例如：台場、秋葉原、敘敘苑燒肉)");
+            if (!dest) return;
+
+            // 模擬 AI 思考與安插
+            setTimeout(() => {
+                // 為了展示，我們模擬 AI 判斷將其安插在 Day 4 的下午 (Index 3 之前)
+                let targetDayIdx = 3; // Day 4
+                let insertIdx = 3;    // 放在晚餐前
+                
+                tripData[targetDayIdx].items.splice(insertIdx, 0, {
+                    id: Date.now().toString(),
+                    time: "待推算",
+                    event: dest,
+                    detail: "🤖 AI 認為安排在此刻最為順路！"
+                });
+                
+                alert(`✨ 【AI 智能安插成功】\n\n系統分析您的路線後，已將「${dest}」自動安插於 Day 4 的行程中！\n您可以使用交通計算功能來推算精準時間。`);
+                renderItinerary();
+                
+                // 自動滾動到安插的地方
+                document.getElementById('day4').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
+        // --- 動態讀取 DOM 最新時間的交通計算 ---
+        function calcTransit(btn, from, to, dayIdx, nextItemIdx) {
+            let resultBox = btn.nextElementSibling;
+            btn.innerHTML = "⏳ AI 搜尋多種交通方式中...";
+            
+            setTimeout(() => {
+                btn.style.display = "none";
+                resultBox.style.display = "block";
+
+                const routes = [
+                    { type: '🚇 最快路線', line: '地鐵/JR', time: Math.floor(Math.random() * 10) + 10, price: '180 JPY' },
+                    { type: '🚶 最省錢', line: '散步/公車', time: Math.floor(Math.random() * 15) + 20, price: '0 - 150 JPY' },
+                    { type: '🚕 最輕鬆', line: '計程車 (Uber)', time: Math.floor(Math.random() * 8) + 5, price: '約 1,200 JPY' }
+                ];
+
+                let optionsHTML = `<div style="font-weight:bold; margin-bottom:8px; color:#2d3436;">請選擇前往「${to}」的方式：</div>
+                <div class="route-options-container">`;
+
+                routes.forEach((route) => {
+                    optionsHTML += `
+                    <div class="route-card" onclick="selectRoute(this, ${route.time}, ${dayIdx}, ${nextItemIdx})">
+                        <div class="route-info">
+                            <span class="route-title">${route.type} - ${route.line}</span>
+                            <span class="route-details">⏱ 約 ${route.time} 分鐘 • 💰 ${route.price}</span>
+                        </div>
+                        <div style="font-size:1.2rem;">👉</div>
+                    </div>`;
+                });
+
+                optionsHTML += `</div><div class="eta-result"></div>`;
+                resultBox.innerHTML = optionsHTML;
+            }, 600);
+        }
+
+        // 使用者選擇後，即時抓取畫面時間，詢問停留時間，並推算 ETA
+        function selectRoute(card, travelTimeMins, dayIdx, nextItemIdx) {
+            // UI 反饋
+            let container = card.parentElement;
+            let cards = container.querySelectorAll('.route-card');
+            cards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+
+            // 1. 動態從畫面上抓取「上一站」的當下時間 (因為使用者可能已經手動修改過)
+            let prevItemIdx = nextItemIdx - 1;
+            let timeNode = document.querySelector(`.timeline-item[data-day="${dayIdx}"][data-item="${prevItemIdx}"] .time`);
+            let currentTimeStr = timeNode ? timeNode.innerText.trim() : "10:00"; // 防呆預設
+            
+            // 同步更新回資料陣列
+            tripData[dayIdx].items[prevItemIdx].time = currentTimeStr;
+
+            // 2. 詢問使用者預計在前一站停留多久
+            let stayTimeStr = prompt(`您目前的出發時間設定為 ${currentTimeStr}\n請問您預計在這裡停留幾分鐘？`, "60");
+            let stayMins = parseInt(stayTimeStr);
+            if(isNaN(stayMins)) stayMins = 60; // 防呆處理
+
+            // 3. 計算 ETA (當下出發時間 + 停留時間 + 交通時間)
+            let eta = "推算中";
+            if(currentTimeStr.includes(":")) {
+                let parts = currentTimeStr.split(":");
+                let d = new Date();
+                d.setHours(parseInt(parts[0]), parseInt(parts[1]) + stayMins + travelTimeMins); 
+                eta = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+            }
+
+            // 4. 更新結果文字與下一站時間
+            let resultDiv = container.nextElementSibling;
+            resultDiv.style.display = "block";
+            resultDiv.innerHTML = `✅ 已為您計算！<br>停留 ${stayMins} 分鐘 + 車程 ${travelTimeMins} 分鐘<br>抵達下一站時間為 <span style="font-size:1.1rem; text-decoration:underline;">${eta}</span><br>✨ (已自動更新行程表)`;
+
+            // 自動更新陣列資料與下一站的 HTML 顯示時間
+            tripData[dayIdx].items[nextItemIdx].time = eta;
+            let nextItemNode = document.querySelector(`.timeline-item[data-day="${dayIdx}"][data-item="${nextItemIdx}"] .time`);
+            if(nextItemNode) {
+                nextItemNode.innerText = eta;
+                nextItemNode.style.backgroundColor = "#ffeaa7"; // 黃色閃爍提示
+                setTimeout(() => nextItemNode.style.backgroundColor = "transparent", 1500);
+            }
+        }
+
+        window.onload = renderItinerary;
+    </script>
+</body>
+</html>
