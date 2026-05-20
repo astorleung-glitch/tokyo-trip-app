@@ -106,7 +106,7 @@
 
     <header>
         <h1>🗼 東京終極 AI 行程管家</h1>
-        <p>Gemini 驅動 x 高度彈性排程 x 雙人同步</p>
+        <p>Gemini 1.5 驅動 x 高度彈性排程 x 雙人同步</p>
     </header>
 
     <div class="container">
@@ -151,7 +151,7 @@
         <div id="tab-budget" class="tab-content">
             <div class="card" style="border: 2px solid var(--theme-teal);">
                 <div class="card-title">🔑 系統設定 (Gemini API)</div>
-                <p class="detail">請輸入 Google Gemini API Key。<br><b style="color:var(--theme-red);">⚠️ 香港使用者請掛 VPN (日本/台灣/美國)</b></p>
+                <p class="detail">請輸入 Google Gemini API Key。<br><b style="color:var(--theme-red);">⚠️ 香港使用者必讀：請確保手機已掛妥 VPN (日本/台灣/美國)，否則 AI 無法連線。</b></p>
                 <input type="password" id="api-key-input" class="currency-input" style="width:100%; margin-bottom:10px;" placeholder="AIzaSy...">
                 <button class="btn btn-map" style="width:100%; padding:10px; font-size:1rem;" onclick="saveApiKey()">💾 儲存金鑰至本機</button>
             </div>
@@ -217,7 +217,7 @@
 
         let tripData = [];
         let wishlistData = [];
-        let currentModalContext = { action: null, dayIdx: null, itemIdx: null }; // action: 'replace' or 'add'
+        let currentModalContext = { action: null, dayIdx: null, itemIdx: null }; 
 
         const defaultTripData = [
             { dayId: "day1", title: "Day 1：5/21 (四) 抵達與下町悠遊", items: [{ time: "14:50", event: "抵達成田機場 (NRT T2)", detail: "大灣區航空 HB320。入境拿行李。" }, { time: "17:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理 Check-in，放下行李。" }, { time: "17:30", event: "上野夾娃娃機", detail: "阿美橫町周邊娛樂。" }, { time: "18:45", event: "OS Drug 淺草店", detail: "購買藥妝，記得帶現金。" }, { time: "19:30", event: "淺草/上野超市大採買", detail: "買和牛、生魚片、杯麵。" }, { time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店享用大餐與休息。" }] },
@@ -244,7 +244,7 @@
             set(ref(db, 'wishlistData'), wishlistData).then(() => { document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)"; });
         };
 
-        // --- 核心：Gemini API 引擎 ---
+        // --- 核心：Gemini API 引擎 (防彈升級版 1.5) ---
         window.callGemini = async function(promptText, isJson = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 Gemini API Key！"); return null; }
@@ -253,15 +253,17 @@
                 contents: [{ parts: [{ text: promptText }] }],
                 generationConfig: { response_mime_type: isJson ? "application/json" : "text/plain" }
             };
-            let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            
+            // 修正為最穩定的 1.5-flash
+            let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             try {
                 let response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                 let data = await response.json();
                 
+                // 若被阻擋或找不到，切換為 1.5-pro 備援
                 if(data.error && data.error.code === 404) {
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-                    delete body.generationConfig; 
+                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
                     response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
                     data = await response.json();
                 }
@@ -275,7 +277,7 @@
                 }
                 return resultText;
             } catch (error) {
-                alert("API 請求失敗。\n⚠️ 備註：香港地區必須使用 VPN (日/台/美)。\n錯誤：" + error.message);
+                alert("API 請求失敗。\n\n⚠️ 檢查清單：\n1. 確認 VPN 已打開並連線至日本/台灣/美國。\n2. 重整網頁後再試一次。\n\n錯誤訊息：" + error.message);
                 return null;
             }
         };
@@ -287,7 +289,6 @@
 
         window.onload = () => { if(localStorage.getItem('gemini_api_key')) document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key'); };
 
-        // --- UI 操作 ---
         window.switchTab = function(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -343,19 +344,12 @@
             if(confirm("確定要刪除嗎？")) { tripData[dayIdx].items.splice(itemIdx, 1); window.saveDataToCloud(); }
         };
 
-        // --- 新增：上下移動行程功能 ---
         window.moveItem = function(dayIdx, itemIdx, direction) {
             let items = tripData[dayIdx].items;
             if (direction === -1 && itemIdx > 0) {
-                let temp = items[itemIdx];
-                items[itemIdx] = items[itemIdx - 1];
-                items[itemIdx - 1] = temp;
-                window.saveDataToCloud();
+                let temp = items[itemIdx]; items[itemIdx] = items[itemIdx - 1]; items[itemIdx - 1] = temp; window.saveDataToCloud();
             } else if (direction === 1 && itemIdx < items.length - 1) {
-                let temp = items[itemIdx];
-                items[itemIdx] = items[itemIdx + 1];
-                items[itemIdx + 1] = temp;
-                window.saveDataToCloud();
+                let temp = items[itemIdx]; items[itemIdx] = items[itemIdx + 1]; items[itemIdx + 1] = temp; window.saveDataToCloud();
             }
         };
 
@@ -402,39 +396,26 @@
             if(jsonStr) {
                 try {
                     let info = JSON.parse(jsonStr);
-                    info.source = 'ai'; // 標記為 AI 產生
+                    info.source = 'ai'; 
                     wishlistData.push(info); window.saveDataToCloud();
                     alert("✅ 成功加入口袋名單！");
                 } catch(e) { alert("獲取資料失敗。"); }
             }
         };
 
-        // --- 手動新增口袋名單邏輯 ---
-        window.openManualAddModal = function() {
-            document.getElementById('manualAddModal').style.display = 'flex';
-        };
+        window.openManualAddModal = function() { document.getElementById('manualAddModal').style.display = 'flex'; };
 
         window.submitManualWishlist = function() {
             const name = document.getElementById('man-name').value.trim();
             if(!name) { alert("店名/景點名稱為必填喔！"); return; }
-            
             const info = {
-                name: name,
-                location: document.getElementById('man-location').value.trim() || '無提供',
-                phone: document.getElementById('man-phone').value.trim() || '無提供',
-                booking: document.getElementById('man-booking').value.trim() || '無提供',
-                remarks: document.getElementById('man-remarks').value.trim() || '無提供',
-                bestDay: '手動筆記，可隨時安插',
-                source: 'manual' // 標記為手動產生
+                name: name, location: document.getElementById('man-location').value.trim() || '無提供',
+                phone: document.getElementById('man-phone').value.trim() || '無提供', booking: document.getElementById('man-booking').value.trim() || '無提供',
+                remarks: document.getElementById('man-remarks').value.trim() || '無提供', bestDay: '手動筆記，可隨時安插', source: 'manual'
             };
-
-            wishlistData.push(info);
-            window.saveDataToCloud();
-            
-            // 清空表單並關閉
+            wishlistData.push(info); window.saveDataToCloud();
             document.querySelectorAll('#manualAddModal .modal-input').forEach(i => i.value = '');
-            window.closeModal('manualAddModal');
-            alert("✅ 手動筆記已加入口袋名單！");
+            window.closeModal('manualAddModal'); alert("✅ 手動筆記已加入口袋名單！");
         };
 
         window.renderWishlist = function() {
@@ -443,7 +424,6 @@
             container.innerHTML = '';
             wishlistData.forEach((item, index) => {
                 const badgeHtml = item.source === 'manual' ? `<div class="manual-badge">✍️ 手動輸入</div>` : `<div class="ai-badge">🤖 AI 分析</div>`;
-                
                 container.innerHTML += `
                 <div class="wishlist-card">
                     ${badgeHtml}
@@ -460,20 +440,15 @@
 
         window.removeWishlist = function(idx) { if(confirm("確定要刪除這個備用景點嗎？")) { wishlistData.splice(idx, 1); window.saveDataToCloud(); } };
 
-        // --- 共用的替換/新增 Modal ---
         window.openActionModal = function(action, dayIdx, itemIdx) {
             currentModalContext = { action, dayIdx, itemIdx };
             const title = action === 'replace' ? '🔄 選擇要替換的口袋景點' : '➕ 選擇要安插的口袋景點';
             document.getElementById('modal-title').innerText = title;
-
             const listContainer = document.getElementById('modal-wishlist-list');
-            if(wishlistData.length === 0) { 
-                listContainer.innerHTML = "<p>口袋名單目前是空的！請先到「口袋」分頁新增。</p>"; 
-            } else {
+            if(wishlistData.length === 0) { listContainer.innerHTML = "<p>口袋名單目前是空的！請先到「口袋」分頁新增。</p>"; } 
+            else {
                 listContainer.innerHTML = '';
-                wishlistData.forEach((item, idx) => { 
-                    listContainer.innerHTML += `<button class="wishlist-item-btn" onclick="executeAction(${idx})"><strong style="color:var(--theme-teal); font-size:1.1rem;">${item.name}</strong><br><span style="font-size:0.8rem; color:#666;">備註：${item.remarks}</span></button>`; 
-                });
+                wishlistData.forEach((item, idx) => { listContainer.innerHTML += `<button class="wishlist-item-btn" onclick="executeAction(${idx})"><strong style="color:var(--theme-teal); font-size:1.1rem;">${item.name}</strong><br><span style="font-size:0.8rem; color:#666;">備註：${item.remarks}</span></button>`; });
             }
             document.getElementById('actionModal').style.display = 'flex';
         };
@@ -481,25 +456,15 @@
         window.closeModal = function(modalId) { document.getElementById(modalId).style.display = 'none'; };
 
         window.executeAction = function(wishlistIdx) {
-            const selectedItem = wishlistData[wishlistIdx]; 
-            const { action, dayIdx, itemIdx } = currentModalContext;
-            
+            const selectedItem = wishlistData[wishlistIdx]; const { action, dayIdx, itemIdx } = currentModalContext;
             if (action === 'replace') {
-                tripData[dayIdx].items[itemIdx].event = selectedItem.name; 
-                tripData[dayIdx].items[itemIdx].detail = `✅ 從口袋名單替換。${selectedItem.remarks}`;
+                tripData[dayIdx].items[itemIdx].event = selectedItem.name; tripData[dayIdx].items[itemIdx].detail = `✅ 從口袋名單替換。${selectedItem.remarks}`;
                 alert(`已成功將行程替換為「${selectedItem.name}」！`);
             } else if (action === 'add') {
-                // 在當下 index 之後插入一筆
-                tripData[dayIdx].items.splice(itemIdx + 1, 0, { 
-                    time: "待定", 
-                    event: selectedItem.name, 
-                    detail: `✅ 從口袋名單新增。${selectedItem.remarks}` 
-                });
+                tripData[dayIdx].items.splice(itemIdx + 1, 0, { time: "待定", event: selectedItem.name, detail: `✅ 從口袋名單新增。${selectedItem.remarks}` });
                 alert(`已成功在下方安插「${selectedItem.name}」！`);
             }
-            
-            window.saveDataToCloud(); 
-            window.closeModal('actionModal'); 
+            window.saveDataToCloud(); window.closeModal('actionModal'); 
         };
 
         window.calcTransit = function(btn, from, to, dayIdx, nextItemIdx) {
