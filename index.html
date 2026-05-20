@@ -6,12 +6,18 @@
     <title>東京終極 AI 行程管家</title>
     <style>
         :root {
-            --primary-color: #FFB7C5; 
-            --secondary-color: #E8F1F2;
-            --accent-color: #d86c81;
+            --theme-teal: #58A697;
+            --theme-cream: #F2E8C9;
+            --theme-peach: #F29979;
+            --theme-coral: #F28379;
+            --theme-red: #BF3F3F;
+
+            --primary-color: var(--theme-teal);
+            --secondary-color: var(--theme-cream);
+            --accent-color: var(--theme-red);
             --text-dark: #333333;
             --text-light: #666666;
-            --bg-color: #F8F9FA;
+            --bg-color: #FDFCF9; 
             --white: #FFFFFF;
         }
 
@@ -19,10 +25,10 @@
         body { background-color: var(--bg-color); color: var(--text-dark); padding-bottom: 80px; }
 
         header {
-            background: linear-gradient(135deg, #FFB7C5 0%, #FF9EAE 100%);
+            background: linear-gradient(135deg, var(--theme-teal) 0%, #468c7f 100%);
             color: var(--white); padding: 30px 20px 20px; text-align: center;
             border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
         
         .container { padding: 15px; max-width: 800px; margin: 0 auto; }
@@ -30,14 +36,14 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background-color: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card { background-color: var(--white); border-radius: 12px; padding: 15px; margin-bottom: 25px; box-shadow: 0 2px 12px rgba(88, 166, 151, 0.08); }
         .card-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; color: var(--accent-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 8px; }
 
-        .timeline-item { margin-bottom: 15px; padding: 12px; border-radius: 10px; background: #fff; border: 1px solid #eee; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: 0.3s; }
+        .timeline-item { margin-bottom: 15px; padding: 12px; border-radius: 10px; background: #fff; border: 1px solid #f0eee9; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: 0.3s; }
         .dest-header { display: flex; justify-content: space-between; align-items: center; }
         
-        .editable { border-bottom: 1px dashed #ccc; cursor: text; outline: none; transition: background-color 0.5s ease; }
-        .editable:focus { border-bottom: 1px solid var(--accent-color); background-color: #fff0f3; padding: 2px; border-radius: 3px; }
+        .editable { border-bottom: 1px dashed #ccc; cursor: text; outline: none; transition: 0.3s ease; }
+        .editable:focus { border-bottom: 1px solid var(--accent-color); background-color: #fff5f5; padding: 2px; border-radius: 3px; }
         
         .time { font-weight: bold; color: var(--accent-color); font-size: 1.1rem; border-radius: 4px;}
         .dest-content { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -47,223 +53,323 @@
 
         .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
         .btn { padding: 6px 10px; border-radius: 6px; border: none; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; color: #fff;}
-        .btn-map { background-color: #0984e3; }
-        .btn-replace { background-color: #e17055; }
-        .btn-add { background-color: #00b894; }
-        .btn-remove { background-color: #d63031; }
-        .btn-ai { background-color: #6c5ce7; }
+        .btn-map { background-color: var(--theme-teal); }
+        .btn-replace { background-color: var(--theme-peach); color: #333; }
+        .btn-add { background-color: var(--theme-coral); }
+        .btn-remove { background-color: var(--theme-red); }
+        .btn-ai { background-color: #4a4a4a; }
         .btn:active { transform: scale(0.95); opacity: 0.8; }
 
-        /* 交通選項全新 UI */
-        .transit-box { margin-top: 8px; background: var(--secondary-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; }
-        .btn-transit { width: 100%; background: #dfe6e9; color: #2d3436; padding: 8px; border-radius: 6px; text-align: center; border: 1px dashed #b2bec3; cursor: pointer; font-weight: bold; margin-bottom: 5px;}
-        .btn-transit:hover { background: #b2bec3; }
+        .transit-box { margin-top: 8px; background: var(--secondary-color); padding: 10px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #e8e0c3; }
+        .btn-transit { width: 100%; background: #fff; color: var(--theme-teal); padding: 8px; border-radius: 6px; text-align: center; border: 1px dashed var(--theme-teal); cursor: pointer; font-weight: bold; margin-bottom: 5px;}
         .transit-result { display: none; margin-top: 10px; }
-        
-        /* 多重路線卡片 */
         .route-options-container { display: flex; flex-direction: column; gap: 8px; }
-        .route-card { border: 1px solid #b2bec3; border-radius: 6px; padding: 10px; cursor: pointer; background: #fff; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .route-card:hover { border-color: #0984e3; background: #f0f8ff; }
-        .route-card.selected { border-color: #00b894; background: #e8f8f5; border-width: 2px; }
-        .route-info { display: flex; flex-direction: column; gap: 4px; }
+        .route-card { border: 1px solid #ddd; border-radius: 6px; padding: 10px; cursor: pointer; background: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .route-card.selected { border-color: var(--theme-teal); background: #eaf5f3; border-width: 2px; }
+        .route-info { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .route-title { font-weight: bold; color: #2d3436; font-size: 0.95rem; }
-        .route-details { font-size: 0.8rem; color: #636e72; }
-        .eta-result { margin-top: 10px; display: none; color: #d63031; font-weight: bold; padding-left: 5px; border-left: 3px solid #d63031; line-height: 1.4;}
+        .route-highlight { color: var(--theme-teal); font-weight: bold; }
+        .eta-result { margin-top: 10px; display: none; color: var(--theme-red); font-weight: bold; padding-left: 5px; border-left: 3px solid var(--theme-red); line-height: 1.4;}
 
-        .ai-recommendation { display: none; background: #f0f0ff; border-left: 3px solid #6c5ce7; padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.85rem; color: #333; line-height: 1.6; }
+        .ai-recommendation { display: none; background: #fff9f8; border-left: 3px solid var(--theme-coral); padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 0.85rem; color: #333; line-height: 1.6; }
 
-        /* 懸浮安插按鈕 */
-        .fab-ai { position: fixed; bottom: 90px; right: 20px; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border: none; border-radius: 50px; padding: 12px 20px; font-size: 0.95rem; font-weight: bold; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4); cursor: pointer; z-index: 999; display: flex; align-items: center; gap: 6px; transition: 0.2s;}
-        .fab-ai:active { transform: scale(0.9); }
+        .fab-ai { position: fixed; bottom: 90px; right: 20px; background: linear-gradient(135deg, var(--theme-coral), var(--theme-red)); color: white; border: none; border-radius: 50px; padding: 12px 20px; font-size: 0.95rem; font-weight: bold; box-shadow: 0 4px 15px rgba(191, 63, 63, 0.3); cursor: pointer; z-index: 999; display: flex; align-items: center; gap: 6px;}
 
         ul.info-list { list-style: none; margin-left: 0; }
         ul.info-list li { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; line-height: 1.5;}
-        ul.info-list li::before { content: "🌸 "; }
+        ul.info-list li::before { content: "🎏 "; }
+        
+        .currency-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; text-align: center; width: 45%;}
 
-        nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--white); display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto;}
+        .wishlist-item-btn { display: block; width: 100%; text-align: left; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; background: #fafafa; cursor: pointer;}
+        .wishlist-item-btn:hover { border-color: var(--theme-teal); background: #f0f8f7; }
+
+        .wishlist-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; position: relative;}
+        .ai-badge { position: absolute; top: 10px; right: 10px; background: var(--theme-teal); color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;}
+
+        /* 雲端連線狀態 */
+        #sync-status { text-align: center; font-size: 0.8rem; color: var(--theme-teal); padding: 5px; font-weight: bold; background: #eaf5f3; margin-bottom: 15px; border-radius: 6px; }
+
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--white); display: flex; justify-content: space-around; padding: 10px 0 20px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-light); font-size: 0.75rem; cursor: pointer; }
-        .nav-item.active { color: var(--accent-color); transform: translateY(-3px); font-weight: bold;}
-        .nav-icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--theme-red); transform: translateY(-3px); font-weight: bold;}
+        .nav-icon { font-size: 1.3rem; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>🗼 東京終極 AI 行程管家</h1>
-        <p>動態時間推算 x 智能安插</p>
+        <p>DeepSeek 雲端連線版 x 雙人即時同步</p>
     </header>
 
     <div class="container">
         
         <div id="tab-itinerary" class="tab-content active">
-            <div style="margin-bottom: 15px; font-size: 0.85rem; color: #666; text-align: center; background: #fff0f3; padding: 10px; border-radius: 8px;">
-                💡 <b>使用提示：</b>時間可隨意修改！點擊交通計算時，系統會<b>抓取您最新修改的時間</b>來精準推算下一站抵達時刻。
+            <div id="sync-status">🟢 雲端同步連線中...</div>
+            <div style="margin-bottom: 15px; font-size: 0.85rem; color: #555; text-align: center; background: var(--theme-cream); padding: 10px; border-radius: 8px;">
+                💡 點擊「替換」可從口袋名單中選擇景點！點擊「🚃交通計算」可獲取 Google Maps 導航。
             </div>
             <div id="itinerary-container"></div>
         </div>
 
-        <div id="tab-transport" class="tab-content">
+        <div id="tab-info" class="tab-content">
             <div class="card">
-                <div class="card-title">機場往返市區</div>
-                <p><strong>🚄 京成電鐵 Skyliner</strong></p>
-                <p class="detail">去程：5/21 成田T2 ➔ 京成上野 (約45分)</p>
-                <p class="detail">回程：5/25 京成上野 ➔ 成田T2 (約45分)</p>
+                <div class="card-title">飯店詳細資訊</div>
+                <p style="font-size: 1.1rem; font-weight: bold; color:#2d3436;">HOTEL MYSTAYS Ueno East</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                <ul class="info-list">
+                    <li><b>入住：</b>2026/5/21 15:00 後 | <b>退房：</b>5/25 11:00 前</li>
+                    <li><b>地址：</b>5 Chome-5-13 Higashiueno, Taito City, Tokyo</li>
+                </ul>
+                <div style="margin-top: 15px;"><a href="https://www.google.com/maps/search/?api=1&query=HOTEL+MYSTAYS+Ueno+East" target="_blank" class="btn btn-map" style="padding: 10px; font-size:1rem; display:block; text-align:center;">📍 飯店地圖導航</a></div>
             </div>
             <div class="card">
                 <div class="card-title">市區大眾運輸指南</div>
                 <ul class="info-list">
-                    <li><b>支付方式：</b>強力推薦將 Suica 綁定於 Apple Pay 或 Google Wallet。</li>
-                    <li><b>銀座線 (橘色)：</b>連接上野、淺草、銀座、表參道、澀谷。</li>
-                    <li><b>日比谷線 (銀色)：</b>連接上野、麻布台之丘、六本木、銀座。</li>
-                    <li><b>JR 山手線 (綠色)：</b>環狀線，連接上野與新宿。</li>
+                    <li><b>Skyliner：</b>去程 5/21 成田T2 ➔ 京成上野 | 回程 5/25 京成上野 ➔ 成田T2</li>
+                    <li><b>支付：</b>推薦 Suica 綁定 Apple Pay / Google Wallet。</li>
                 </ul>
             </div>
         </div>
 
-        <div id="tab-hotel" class="tab-content">
+        <div id="tab-wishlist" class="tab-content">
             <div class="card">
-                <div class="card-title">飯店詳細資訊</div>
-                <p style="font-size: 1.1rem; font-weight: bold; color:#2d3436;">HOTEL MYSTAYS Ueno East</p>
-                <p class="detail">上野東 MYSTAYS 酒店</p>
-                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
-                <ul class="info-list">
-                    <li><b>入住：</b>2026/5/21 (四) 15:00 後</li>
-                    <li><b>退房：</b>2026/5/25 (一) 11:00 前</li>
-                    <li><b>地址：</b>5 Chome-5-13 Higashiueno, Taito City, Tokyo 110-0015</li>
-                </ul>
+                <div class="card-title">📝 我們的口袋名單 (雲端共用)</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                    <input type="text" id="new-wishlist-input" class="currency-input" style="flex:1;" placeholder="輸入想去的景點 (例: 淺草寺)">
+                    <button class="btn btn-add" style="font-size: 1rem; padding: 10px 15px;" onclick="addWishlistItem()">➕ 讓 AI 分析</button>
+                </div>
+                <div id="wishlist-container">
+                    <div style="text-align:center; color:#999; font-size:0.9rem; padding:20px;">載入雲端資料中...</div>
+                </div>
             </div>
         </div>
 
         <div id="tab-budget" class="tab-content">
+            <div class="card" style="border: 2px solid var(--theme-teal);">
+                <div class="card-title">🔑 系統設定 (DeepSeek API)</div>
+                <p class="detail">請輸入 DeepSeek API Key 以啟用真實 AI 運算。此金鑰僅保存在本地手機，絕不上傳雲端。</p>
+                <input type="password" id="api-key-input" class="currency-input" style="width:100%; margin-bottom:10px;" placeholder="sk-...">
+                <button class="btn btn-map" style="width:100%; padding:10px; font-size:1rem;" onclick="saveApiKey()">💾 儲存金鑰至本機</button>
+            </div>
+
             <div class="card">
-                <div class="card-title">綜合預算概估 (2人同行)</div>
-                <p><strong>總預算：10,000 HKD (約 200,000 JPY)</strong></p>
-                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
-                <div style="margin-top: 15px; background:#e8f1f2; padding:10px; border-radius:8px;">
-                    <p style="font-weight: bold; color: #d86c81; font-size: 1.1rem; text-align:center;">
-                        預估總花費：162,500 JPY<br>
-                        剩餘彈性基金：37,500 JPY
-                    </p>
+                <div class="card-title">💱 實用匯率計算機</div>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                    <input type="number" id="hkd-input" class="currency-input" placeholder="港幣 HKD" oninput="convertCurrency('HKD')">
+                    <span style="font-weight: bold; color: var(--theme-teal);">↔</span>
+                    <input type="number" id="jpy-input" class="currency-input" placeholder="日幣 JPY" oninput="convertCurrency('JPY')">
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="replaceModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: var(--theme-teal); margin-bottom: 15px;">🔄 從口袋名單選擇替換</h3>
+            <div id="modal-wishlist-list"></div>
+            <button class="btn btn-ai" style="width:100%; margin-top:15px; padding:10px;" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+
     <button class="fab-ai" onclick="smartFitSchedule()">
-        <span>🤖</span> 安插新景點
+        <span>🤖</span> AI 智慧安插
     </button>
 
     <nav>
         <div class="nav-item active" onclick="switchTab('itinerary', this)"><div class="nav-icon">📅</div><div>行程</div></div>
-        <div class="nav-item" onclick="switchTab('transport', this)"><div class="nav-icon">🚃</div><div>交通</div></div>
-        <div class="nav-item" onclick="switchTab('hotel', this)"><div class="nav-icon">🏨</div><div>住宿</div></div>
-        <div class="nav-item" onclick="switchTab('budget', this)"><div class="nav-icon">💰</div><div>預算</div></div>
+        <div class="nav-item" onclick="switchTab('info', this)"><div class="nav-icon">🏨</div><div>資訊</div></div>
+        <div class="nav-item" onclick="switchTab('wishlist', this)"><div class="nav-icon">📝</div><div>口袋</div></div>
+        <div class="nav-item" onclick="switchTab('budget', this)"><div class="nav-icon">⚙️</div><div>設定</div></div>
     </nav>
 
-    <script>
-        // 資料結構保持不變
-        let tripData = [
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        // ===== Firebase 配置 =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNcqV4HqViuo_rNmK-KJds3DiSbSK5fJM",
+            authDomain: "tokyotrip2026-9bb6e.firebaseapp.com",
+            databaseURL: "https://tokyotrip2026-9bb6e-default-rtdb.firebaseio.com",
+            projectId: "tokyotrip2026-9bb6e",
+            storageBucket: "tokyotrip2026-9bb6e.firebasestorage.app",
+            messagingSenderId: "719577194338",
+            appId: "1:719577194338:web:823665eca8ad7edeb1163b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let tripData = [];
+        let wishlistData = [];
+        let currentReplaceTarget = null;
+
+        // 【完整還原的原始行程資料】
+        const defaultTripData = [
             {
                 dayId: "day1", title: "Day 1：5/21 (四) 抵達與下町悠遊",
                 items: [
-                    { id: "1-1", time: "14:50", event: "抵達成田機場 (NRT T2)", detail: "大灣區航空 HB320。入境拿行李。" },
-                    { id: "1-2", time: "17:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理 Check-in，放下行李。" },
-                    { id: "1-3", time: "17:30", event: "上野夾娃娃機", detail: "阿美橫町周邊娛樂。" },
-                    { id: "1-4", time: "18:45", event: "OS Drug 淺草店", detail: "購買藥妝，記得帶現金。" },
-                    { id: "1-5", time: "19:30", event: "淺草/上野超市大採買", detail: "買和牛、生魚片、杯麵。" },
-                    { id: "1-6", time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店享用大餐與休息。" }
+                    { time: "14:50", event: "抵達成田機場 (NRT T2)", detail: "大灣區航空 HB320。入境拿行李。" },
+                    { time: "17:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理 Check-in，放下行李。" },
+                    { time: "17:30", event: "上野夾娃娃機", detail: "阿美橫町周邊娛樂。" },
+                    { time: "18:45", event: "OS Drug 淺草店", detail: "購買藥妝，記得帶現金。" },
+                    { time: "19:30", event: "淺草/上野超市大採買", detail: "買和牛、生魚片、杯麵。" },
+                    { time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店享用大餐與休息。" }
                 ]
             },
             {
                 dayId: "day2", title: "Day 2：5/22 (五) 麻布台與新宿",
                 items: [
-                    { id: "2-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
-                    { id: "2-2", time: "11:00", event: "麵 みつヰ (或上野拉麵)", detail: "早午餐吃拉麵。" },
-                    { id: "2-3", time: "14:00", event: "鮨麻布 東京", detail: "麻布台之丘 Omakase 午餐。" },
-                    { id: "2-4", time: "15:45", event: "Afternoon Tea LOVE&TABLE", detail: "表參道吃水果可麗餅。" },
-                    { id: "2-5", time: "18:00", event: "森美術館 Mori Art Museum", detail: "六本木看展與夜景。" },
-                    { id: "2-6", time: "20:30", event: "七代目松五郎 涮涮鍋", detail: "新宿東宝ビル店吃晚餐。" },
-                    { id: "2-7", time: "22:00", event: "新宿逛街 (唐吉訶德)", detail: "歌舞伎町周邊採買。" },
-                    { id: "2-8", time: "23:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
+                    { time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { time: "11:00", event: "麵 みつヰ (或上野拉麵)", detail: "早午餐吃拉麵。" },
+                    { time: "14:00", event: "鮨麻布 東京", detail: "麻布台之丘 Omakase 午餐。" },
+                    { time: "15:45", event: "Afternoon Tea LOVE&TABLE", detail: "表參道吃水果可麗餅。" },
+                    { time: "18:00", event: "森美術館 Mori Art Museum", detail: "六本木看展與夜景。" },
+                    { time: "20:30", event: "七代目松五郎 涮涮鍋", detail: "新宿東宝ビル店吃晚餐。" },
+                    { time: "22:00", event: "新宿逛街 (唐吉訶德)", detail: "歌舞伎町周邊採買。" },
+                    { time: "23:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
                 ]
             },
             {
                 dayId: "day3", title: "Day 3：5/23 (六) 銀座奢華與高空景觀",
                 items: [
-                    { id: "3-1", time: "10:30", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
-                    { id: "3-2", time: "11:30", event: "金のダイニング 鮪金", detail: "銀座海鮮 Omakase。" },
-                    { id: "3-3", time: "13:30", event: "銀座步行者天國", detail: "Ginza Six、三越逛街。" },
-                    { id: "3-4", time: "16:00", event: "Hills House Dining 33", detail: "麻布台之丘法式午茶/晚餐。" },
-                    { id: "3-5", time: "19:30", event: "麺や 七彩 (八丁堀)", detail: "備案宵夜：喜多方拉麵。" },
-                    { id: "3-6", time: "21:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
+                    { time: "10:30", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { time: "11:30", event: "金のダイニング 鮪金", detail: "銀座海鮮 Omakase。" },
+                    { time: "13:30", event: "銀座步行者天國", detail: "Ginza Six、三越逛街。" },
+                    { time: "16:00", event: "Hills House Dining 33", detail: "麻布台之丘法式午茶/晚餐。" },
+                    { time: "19:30", event: "麺や 七彩 (八丁堀)", detail: "備案宵夜：喜多方拉麵。" },
+                    { time: "21:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店休息。" }
                 ]
             },
             {
                 dayId: "day4", title: "Day 4：5/24 (日) 龍蝦堡與老饕拉麵",
                 items: [
-                    { id: "4-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
-                    { id: "4-2", time: "11:00", event: "Luke's Lobster 新宿", detail: "大啖龍蝦堡。" },
-                    { id: "4-3", time: "13:00", event: "澀谷 SKY / 原宿逛街", detail: "可吃 HARBS 千層蛋糕。" },
-                    { id: "4-4", time: "18:30", event: "中華蕎麦 無冠 (五反田)", detail: "特製牡蠣塩拉麵。" },
-                    { id: "4-5", time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店整理行李。" }
+                    { time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "飯店出發。" },
+                    { time: "11:00", event: "Luke's Lobster 新宿", detail: "大啖龍蝦堡。" },
+                    { time: "13:00", event: "澀谷 SKY / 原宿逛街", detail: "可吃 HARBS 千層蛋糕。" },
+                    { time: "18:30", event: "中華蕎麦 無冠 (五反田)", detail: "特製牡蠣塩拉麵。" },
+                    { time: "20:30", event: "HOTEL MYSTAYS 上野東", detail: "回飯店整理行李。" }
                 ]
             },
             {
                 dayId: "day5", title: "Day 5：5/25 (一) 採買與賦歸",
                 items: [
-                    { id: "5-1", time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理退房，寄放行李。" },
-                    { id: "5-2", time: "10:30", event: "阿美橫町最後採買", detail: "買零食、吃上野定食。" },
-                    { id: "5-3", time: "12:30", event: "搭乘 Skyliner", detail: "前往成田機場。" },
-                    { id: "5-4", time: "14:00", event: "抵達成田機場", detail: "逛免稅店。" },
-                    { id: "5-5", time: "15:50", event: "大灣區航空 HB321 起飛", detail: "滿載而歸！" }
+                    { time: "10:00", event: "HOTEL MYSTAYS 上野東", detail: "辦理退房，寄放行李。" },
+                    { time: "10:30", event: "阿美橫町最後採買", detail: "買零食、吃上野定食。" },
+                    { time: "12:30", event: "搭乘 Skyliner", detail: "前往成田機場。" },
+                    { time: "14:00", event: "抵達成田機場", detail: "逛免稅店。" },
+                    { time: "15:50", event: "大灣區航空 HB321 起飛", detail: "滿載而歸！" }
                 ]
             }
         ];
 
-        function switchTab(tabId, element) {
+        // --- 核心：雲端資料同步監聽器 ---
+        const tripRef = ref(db, 'tripData');
+        const wishlistRef = ref(db, 'wishlistData');
+
+        onValue(tripRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                tripData = data;
+                window.renderItinerary();
+                document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)";
+            } else {
+                set(tripRef, defaultTripData);
+            }
+        });
+
+        onValue(wishlistRef, (snapshot) => {
+            const data = snapshot.val();
+            wishlistData = data || [];
+            window.renderWishlist();
+        });
+
+        // 寫入雲端的函式
+        window.saveDataToCloud = function() {
+            document.getElementById('sync-status').innerHTML = "⏳ 儲存至雲端...";
+            set(ref(db, 'tripData'), tripData);
+            set(ref(db, 'wishlistData'), wishlistData).then(() => {
+                document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)";
+            });
+        };
+
+        // --- DeepSeek API 核心 ---
+        window.callDeepSeek = async function(promptText, isJson = false) {
+            const apiKey = localStorage.getItem('deepseek_api_key');
+            if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 DeepSeek API Key！"); return null; }
+            
+            const url = `https://api.deepseek.com/chat/completions`;
+            const body = { model: "deepseek-chat", messages: [{ role: "user", content: promptText }] };
+            if (isJson) body.response_format = { type: "json_object" };
+
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, 
+                    body: JSON.stringify(body) 
+                });
+                if(!response.ok) { const errData = await response.json(); throw new Error(errData.error?.message || "伺服器無回應"); }
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                alert("API 請求失敗，請檢查金鑰。\n錯誤訊息：" + error.message);
+                return null;
+            }
+        };
+
+        window.saveApiKey = function() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if(key) {
+                localStorage.setItem('deepseek_api_key', key);
+                alert("✅ 金鑰已安全儲存於您的本機！");
+            }
+        };
+
+        window.onload = () => {
+            if(localStorage.getItem('deepseek_api_key')) document.getElementById('api-key-input').value = localStorage.getItem('deepseek_api_key');
+        };
+
+        // --- UI 操作全域函式化 ---
+        window.switchTab = function(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             element.classList.add('active');
             window.scrollTo(0, 0);
-        }
+        };
 
-        function getMapLink(query) { return `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(query)}`; }
+        window.getMapLink = function(query) { return `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(query)}`; };
 
-        function renderItinerary() {
+        window.renderItinerary = function() {
             const container = document.getElementById('itinerary-container');
             container.innerHTML = '';
-
             tripData.forEach((day, dayIndex) => {
-                let dayHTML = `<div class="card" id="${day.dayId}">
-                                <div class="card-title">${day.title}</div>`;
-                
+                let dayHTML = `<div class="card" id="${day.dayId}"><div class="card-title">${day.title}</div>`;
                 day.items.forEach((item, itemIndex) => {
                     dayHTML += `
                     <div class="timeline-item" data-day="${dayIndex}" data-item="${itemIndex}">
-                        <div class="dest-header">
-                            <span class="time editable" contenteditable="true">${item.time}</span>
-                        </div>
+                        <div class="dest-header"><span class="time editable" contenteditable="true" onblur="updateText(${dayIndex}, ${itemIndex}, 'time', this)">${item.time}</span></div>
                         <div class="dest-content">
                             <div class="dest-info">
-                                <div class="event editable" contenteditable="true">${item.event}</div>
-                                <div class="detail editable" contenteditable="true">${item.detail}</div>
+                                <div class="event editable" contenteditable="true" onblur="updateText(${dayIndex}, ${itemIndex}, 'event', this)">${item.event}</div>
+                                <div class="detail editable" contenteditable="true" onblur="updateText(${dayIndex}, ${itemIndex}, 'detail', this)">${item.detail}</div>
                                 <div class="action-buttons">
-                                    <a href="${getMapLink(item.event)}" target="_blank" class="btn btn-map">📍地圖</a>
-                                    <button class="btn btn-replace" onclick="handleAction('replace', ${dayIndex}, ${itemIndex})">🔄替換</button>
+                                    <a href="${window.getMapLink(item.event)}" target="_blank" class="btn btn-map">📍地圖</a>
+                                    <button class="btn btn-replace" onclick="openReplaceModal(${dayIndex}, ${itemIndex})">🔄替換</button>
                                     <button class="btn btn-add" onclick="handleAction('add', ${dayIndex}, ${itemIndex})">➕新增</button>
                                     <button class="btn btn-remove" onclick="handleAction('remove', ${dayIndex}, ${itemIndex})">❌刪除</button>
-                                    <button class="btn btn-ai" onclick="toggleAI(this, '${item.event}')">🤖周邊</button>
+                                    <button class="btn btn-ai" onclick="realToggleAI(this, '${item.event}')">🤖推薦</button>
                                 </div>
                             </div>
                         </div>
                         <div class="ai-recommendation"></div>
-                        
                         ${itemIndex < day.items.length - 1 ? `
                         <div class="transit-box">
-                            <div class="btn-transit" onclick="calcTransit(this, '${item.event}', '${day.items[itemIndex+1].event}', ${dayIndex}, ${itemIndex+1})">
-                                🚃 計算前往「${day.items[itemIndex+1].event}」的選項
-                            </div>
+                            <div class="btn-transit" onclick="calcTransit(this, '${item.event}', '${day.items[itemIndex+1].event}', ${dayIndex}, ${itemIndex+1})">🚃 計算前往「${day.items[itemIndex+1].event}」的交通方式</div>
                             <div class="transit-result"></div>
                         </div>` : ''}
                     </div>`;
@@ -271,150 +377,179 @@
                 dayHTML += `</div>`;
                 container.innerHTML += dayHTML;
             });
-        }
+        };
 
-        function handleAction(action, dayIdx, itemIdx) {
+        window.updateText = function(d, i, field, el) {
+            tripData[d].items[i][field] = el.innerText;
+            window.saveDataToCloud(); 
+        };
+
+        window.handleAction = function(action, dayIdx, itemIdx) {
             let day = tripData[dayIdx];
             if (action === 'remove') {
-                if(confirm("確定要刪除這個行程嗎？")) {
-                    day.items.splice(itemIdx, 1);
-                    renderItinerary();
-                }
-            } else if (action === 'replace') {
-                let newVal = prompt("請輸入新景點/餐廳名稱：");
-                if(newVal) {
-                    day.items[itemIdx].event = newVal;
-                    day.items[itemIdx].detail = "AI 已更新地點，請手動調整細節。";
-                    renderItinerary();
-                }
+                if(confirm("確定要刪除嗎？")) { day.items.splice(itemIdx, 1); window.saveDataToCloud(); }
             } else if (action === 'add') {
-                let newVal = prompt("請輸入要新增的景點名稱：");
-                if(newVal) {
-                    day.items.splice(itemIdx + 1, 0, { id: Date.now().toString(), time: "待定", event: newVal, detail: "手動新增的行程。" });
-                    renderItinerary();
-                }
+                let newVal = prompt("請輸入新景點名稱：");
+                if(newVal) { day.items.splice(itemIdx + 1, 0, { time: "待定", event: newVal, detail: "手動新增" }); window.saveDataToCloud(); }
             }
-        }
+        };
 
-        function toggleAI(btn, eventName) {
+        window.realToggleAI = async function(btn, eventName) {
             let aiBox = btn.closest('.timeline-item').querySelector('.ai-recommendation');
             if(aiBox.style.display === "block") { aiBox.style.display = "none"; return; }
             aiBox.style.display = "block";
-            aiBox.innerHTML = "<em>🤖 正在掃描在地數據...</em>";
-            setTimeout(() => {
-                aiBox.innerHTML = `<strong>在地人推薦「${eventName}」周邊：</strong><br>
-                1. 附近高評價隱藏咖啡廳 <a href="${getMapLink(eventName + ' 咖啡廳')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a><br>
-                2. 巷弄高CP值日式定食 <a href="${getMapLink(eventName + ' 定食')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a><br>
-                3. 熱門拍照打卡秘境 <a href="${getMapLink(eventName + ' 景點')}" target="_blank" style="color:#6c5ce7;">📍看地圖</a>`;
-            }, 600);
-        }
+            aiBox.innerHTML = "<em>🤖 老饕思考中，為您搜尋周邊美食...</em>";
+            
+            const prompt = `你是一位東京在地老饕。請根據日本東京的『${eventName}』推薦三間走路 5 分鐘內的高 CP 值餐廳。
+            請用繁體中文回答，格式直接給：
+            1. 餐廳名稱 - 簡短特色
+            2. 餐廳名稱 - 簡短特色
+            3. 餐廳名稱 - 簡短特色
+            不要廢話，直接給重點。`;
+            
+            const result = await window.callDeepSeek(prompt);
+            if(result) {
+                let formattedResult = result.replace(/(\d+\.\s)(.*?)(?=\s-)/g, `$1<a href="https://www.google.com/maps/dir/?api=1&origin=...$2" target="_blank" style="color:var(--theme-teal); font-weight:bold;">📍$2</a>`);
+                aiBox.innerHTML = `<strong>✨ 在地老饕推薦：</strong><br><div style="white-space: pre-wrap; margin-top:5px;">${formattedResult}</div>`;
+            } else { aiBox.innerHTML = "<em>API 請求失敗，請重試。</em>"; }
+        };
 
-        // --- 全新動態智慧安插功能 (Smart Fit) ---
-        function smartFitSchedule() {
-            let dest = prompt("想加入哪個新景點或餐廳？\n(例如：台場、秋葉原、敘敘苑燒肉)");
+        window.smartFitSchedule = async function() {
+            let dest = prompt("想加入哪個新景點或餐廳？\n(例如：秋葉原、敘敘苑燒肉)");
             if (!dest) return;
 
-            // 模擬 AI 思考與安插
-            setTimeout(() => {
-                // 為了展示，我們模擬 AI 判斷將其安插在 Day 4 的下午 (Index 3 之前)
-                let targetDayIdx = 3; // Day 4
-                let insertIdx = 3;    // 放在晚餐前
-                
-                tripData[targetDayIdx].items.splice(insertIdx, 0, {
-                    id: Date.now().toString(),
-                    time: "待推算",
-                    event: dest,
-                    detail: "🤖 AI 認為安排在此刻最為順路！"
-                });
-                
-                alert(`✨ 【AI 智能安插成功】\n\n系統分析您的路線後，已將「${dest}」自動安插於 Day 4 的行程中！\n您可以使用交通計算功能來推算精準時間。`);
-                renderItinerary();
-                
-                // 自動滾動到安插的地方
-                document.getElementById('day4').scrollIntoView({ behavior: 'smooth' });
-            }, 500);
-        }
+            let simplifiedTrip = tripData.map((d, i) => { return { dayIndex: i, places: d.items.map(item => item.event).join(" -> ") }; });
+            const prompt = `行程表：${JSON.stringify(simplifiedTrip)}。我要額外安插新景點：「${dest}」。請根據地理位置判斷最適合安插在哪一天哪個位置。請務必回傳 JSON 格式 (包含 dayIdx, insertIdx, reason)，不要 markdown：{"dayIdx": 0, "insertIdx": 1, "reason": "理由"}`;
 
-        // --- 動態讀取 DOM 最新時間的交通計算 ---
-        function calcTransit(btn, from, to, dayIdx, nextItemIdx) {
+            alert("🤖 DeepSeek 正在為您智慧排程，這需要幾秒鐘...");
+            const jsonStr = await window.callDeepSeek(prompt, true);
+            if(jsonStr) {
+                try {
+                    let aiDecision = JSON.parse(jsonStr.replace(/```json/g, '').replace(/```/g, '').trim());
+                    tripData[aiDecision.dayIdx].items.splice(aiDecision.insertIdx, 0, { time: "待推算", event: dest, detail: `🤖 AI 安插：${aiDecision.reason}` });
+                    window.saveDataToCloud();
+                    alert(`✨ 【智慧安插成功】\n\n${aiDecision.reason}\n已加入 Day ${aiDecision.dayIdx + 1}！`);
+                    document.getElementById(tripData[aiDecision.dayIdx].dayId).scrollIntoView({ behavior: 'smooth' });
+                } catch(e) { alert("解析失敗，請稍後再試。"); }
+            }
+        };
+
+        window.addWishlistItem = async function() {
+            const input = document.getElementById('new-wishlist-input');
+            const dest = input.value.trim();
+            if(!dest) return;
+            input.value = "🤖 正在為您搜尋網路資料...";
+            input.disabled = true;
+
+            let simplifiedTrip = tripData.map(d => d.places).join(" | ");
+            const prompt = `請查詢東京「${dest}」的觀光資訊。這是我目前行程：${simplifiedTrip}。請回傳 JSON (無 markdown)：{"name": "${dest}","location": "地址或鄰近地鐵","phone": "電話","booking": "預約方式","remarks": "特別事項","bestDay": "推薦在 Day X 前往，因為..."}`;
+
+            const jsonStr = await window.callDeepSeek(prompt, true);
+            input.disabled = false; input.value = "";
+
+            if(jsonStr) {
+                try {
+                    let info = JSON.parse(jsonStr.replace(/```json/g, '').replace(/```/g, '').trim());
+                    wishlistData.push(info);
+                    window.saveDataToCloud();
+                    alert("✅ 成功加入口袋名單！您的朋友也能立刻看到。");
+                } catch(e) { alert("獲取資料失敗。"); }
+            }
+        };
+
+        window.renderWishlist = function() {
+            const container = document.getElementById('wishlist-container');
+            if(wishlistData.length === 0) { container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">目前口袋空空，趕快讓 AI 幫你爬取資料吧！</div>`; return; }
+            container.innerHTML = '';
+            wishlistData.forEach((item, index) => {
+                container.innerHTML += `
+                <div class="wishlist-card">
+                    <div class="ai-badge">AI 分析</div>
+                    <h3 style="color:var(--theme-teal); margin-bottom:8px;">${item.name}</h3>
+                    <p class="detail"><b>📍 位置：</b>${item.location} <a href="${window.getMapLink(item.name)}" target="_blank">🗺️ 看地圖</a></p>
+                    <p class="detail"><b>📞 電話：</b>${item.phone}</p>
+                    <p class="detail"><b>📅 預約：</b>${item.booking}</p>
+                    <p class="detail"><b>⚠️ 備註：</b>${item.remarks}</p>
+                    <div style="background:var(--secondary-color); padding:8px; border-radius:6px; margin-top:10px; font-size:0.85rem;"><b>💡 建議：</b>${item.bestDay}</div>
+                    <button class="btn btn-remove" style="margin-top:10px;" onclick="removeWishlist(${index})">移除</button>
+                </div>`;
+            });
+        };
+
+        window.removeWishlist = function(idx) {
+            if(confirm("確定要刪除這個備用景點嗎？")) { wishlistData.splice(idx, 1); window.saveDataToCloud(); }
+        };
+
+        window.openReplaceModal = function(dayIdx, itemIdx) {
+            currentReplaceTarget = { dayIdx, itemIdx };
+            const listContainer = document.getElementById('modal-wishlist-list');
+            if(wishlistData.length === 0) { listContainer.innerHTML = "<p>口袋名單目前是空的！請先到「口袋」分頁新增。</p>"; } 
+            else {
+                listContainer.innerHTML = '';
+                wishlistData.forEach((item, idx) => {
+                    listContainer.innerHTML += `<button class="wishlist-item-btn" onclick="executeReplace(${idx})"><strong style="color:var(--theme-teal); font-size:1.1rem;">${item.name}</strong><br><span style="font-size:0.8rem; color:#666;">建議：${item.bestDay}</span></button>`;
+                });
+            }
+            document.getElementById('replaceModal').style.display = 'flex';
+        };
+
+        window.closeModal = function() { document.getElementById('replaceModal').style.display = 'none'; };
+
+        window.executeReplace = function(wishlistIdx) {
+            const selectedItem = wishlistData[wishlistIdx];
+            const { dayIdx, itemIdx } = currentReplaceTarget;
+            tripData[dayIdx].items[itemIdx].event = selectedItem.name;
+            tripData[dayIdx].items[itemIdx].detail = `✅ 從口袋名單替換。${selectedItem.remarks}`;
+            window.saveDataToCloud();
+            window.closeModal();
+            alert(`已成功將行程替換為「${selectedItem.name}」！朋友的手機也將同步更新。`);
+        };
+
+        window.calcTransit = function(btn, from, to, dayIdx, nextItemIdx) {
             let resultBox = btn.nextElementSibling;
-            btn.innerHTML = "⏳ AI 搜尋多種交通方式中...";
-            
+            btn.innerHTML = "⏳ 讀取路線中...";
             setTimeout(() => {
-                btn.style.display = "none";
-                resultBox.style.display = "block";
-
+                btn.style.display = "none"; resultBox.style.display = "block";
+                let mapDirLink = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
                 const routes = [
-                    { type: '🚇 最快路線', line: '地鐵/JR', time: Math.floor(Math.random() * 10) + 10, price: '180 JPY' },
-                    { type: '🚶 最省錢', line: '散步/公車', time: Math.floor(Math.random() * 15) + 20, price: '0 - 150 JPY' },
-                    { type: '🚕 最輕鬆', line: '計程車 (Uber)', time: Math.floor(Math.random() * 8) + 5, price: '約 1,200 JPY' }
+                    { type: '🚇 地鐵/JR', line: '建議查看乘換案內', time: Math.floor(Math.random() * 10) + 10, price: '約 180 JPY', desc: '速度最快' },
+                    { type: '🚕 計程車', line: '直接叫車', time: Math.floor(Math.random() * 8) + 5, price: '約 1,200 JPY', desc: '最輕鬆' }
                 ];
-
-                let optionsHTML = `<div style="font-weight:bold; margin-bottom:8px; color:#2d3436;">請選擇前往「${to}」的方式：</div>
-                <div class="route-options-container">`;
-
-                routes.forEach((route) => {
-                    optionsHTML += `
-                    <div class="route-card" onclick="selectRoute(this, ${route.time}, ${dayIdx}, ${nextItemIdx})">
-                        <div class="route-info">
-                            <span class="route-title">${route.type} - ${route.line}</span>
-                            <span class="route-details">⏱ 約 ${route.time} 分鐘 • 💰 ${route.price}</span>
-                        </div>
-                        <div style="font-size:1.2rem;">👉</div>
-                    </div>`;
-                });
-
-                optionsHTML += `</div><div class="eta-result"></div>`;
+                let optionsHTML = `<div style="font-weight:bold; margin-bottom:8px;">前往「${to}」：</div><div class="route-options-container">`;
+                routes.forEach((route) => { optionsHTML += `<div class="route-card" onclick="selectRoute(this, ${route.time}, ${dayIdx}, ${nextItemIdx})"><div class="route-info"><span class="route-title">${route.type}</span> <span class="route-details">⏱ 約 ${route.time} 分鐘</span></div>👉</div>`; });
+                optionsHTML += `</div><div style="margin-top: 10px;"><a href="${mapDirLink}" target="_blank" class="btn btn-map" style="display: block; width: 100%; text-align: center; padding: 10px;">🗺️ Google Maps 導航</a></div><div class="eta-result"></div>`;
                 resultBox.innerHTML = optionsHTML;
-            }, 600);
-        }
+            }, 500);
+        };
 
-        // 使用者選擇後，即時抓取畫面時間，詢問停留時間，並推算 ETA
-        function selectRoute(card, travelTimeMins, dayIdx, nextItemIdx) {
-            // UI 反饋
+        window.selectRoute = function(card, travelTimeMins, dayIdx, nextItemIdx) {
             let container = card.parentElement;
-            let cards = container.querySelectorAll('.route-card');
-            cards.forEach(c => c.classList.remove('selected'));
+            container.querySelectorAll('.route-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
-
-            // 1. 動態從畫面上抓取「上一站」的當下時間 (因為使用者可能已經手動修改過)
             let prevItemIdx = nextItemIdx - 1;
             let timeNode = document.querySelector(`.timeline-item[data-day="${dayIdx}"][data-item="${prevItemIdx}"] .time`);
-            let currentTimeStr = timeNode ? timeNode.innerText.trim() : "10:00"; // 防呆預設
-            
-            // 同步更新回資料陣列
+            let currentTimeStr = timeNode ? timeNode.innerText.trim() : "10:00"; 
             tripData[dayIdx].items[prevItemIdx].time = currentTimeStr;
 
-            // 2. 詢問使用者預計在前一站停留多久
-            let stayTimeStr = prompt(`您目前的出發時間設定為 ${currentTimeStr}\n請問您預計在這裡停留幾分鐘？`, "60");
-            let stayMins = parseInt(stayTimeStr);
-            if(isNaN(stayMins)) stayMins = 60; // 防呆處理
-
-            // 3. 計算 ETA (當下出發時間 + 停留時間 + 交通時間)
+            let stayMins = parseInt(prompt(`出發時間為 ${currentTimeStr}\n預計停留幾分鐘？`, "60")) || 60; 
             let eta = "推算中";
             if(currentTimeStr.includes(":")) {
                 let parts = currentTimeStr.split(":");
-                let d = new Date();
-                d.setHours(parseInt(parts[0]), parseInt(parts[1]) + stayMins + travelTimeMins); 
+                let d = new Date(); d.setHours(parseInt(parts[0]), parseInt(parts[1]) + stayMins + travelTimeMins); 
                 eta = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
             }
-
-            // 4. 更新結果文字與下一站時間
-            let resultDiv = container.nextElementSibling;
+            let resultDiv = container.nextElementSibling.nextElementSibling;
             resultDiv.style.display = "block";
-            resultDiv.innerHTML = `✅ 已為您計算！<br>停留 ${stayMins} 分鐘 + 車程 ${travelTimeMins} 分鐘<br>抵達下一站時間為 <span style="font-size:1.1rem; text-decoration:underline;">${eta}</span><br>✨ (已自動更新行程表)`;
-
-            // 自動更新陣列資料與下一站的 HTML 顯示時間
+            resultDiv.innerHTML = `✅ 停留 ${stayMins}分 + 車程 ${travelTimeMins}分 = 下一站 <span style="text-decoration:underline;">${eta}</span>抵達`;
             tripData[dayIdx].items[nextItemIdx].time = eta;
-            let nextItemNode = document.querySelector(`.timeline-item[data-day="${dayIdx}"][data-item="${nextItemIdx}"] .time`);
-            if(nextItemNode) {
-                nextItemNode.innerText = eta;
-                nextItemNode.style.backgroundColor = "#ffeaa7"; // 黃色閃爍提示
-                setTimeout(() => nextItemNode.style.backgroundColor = "transparent", 1500);
-            }
-        }
+            window.saveDataToCloud(); 
+        };
 
-        window.onload = renderItinerary;
+        window.convertCurrency = function(source) {
+            const rate = 20; const hkdInput = document.getElementById('hkd-input'); const jpyInput = document.getElementById('jpy-input');
+            if (source === 'HKD') { const val = parseFloat(hkdInput.value); jpyInput.value = isNaN(val) ? '' : (val * rate).toFixed(0); } 
+            else { const val = parseFloat(jpyInput.value); hkdInput.value = isNaN(val) ? '' : (val / rate).toFixed(2); }
+        };
     </script>
 </body>
 </html>
