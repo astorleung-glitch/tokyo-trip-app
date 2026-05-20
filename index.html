@@ -243,13 +243,13 @@
             set(ref(db, 'wishlistData'), wishlistData).then(() => { document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)"; });
         };
 
-        // --- 核心：精準對接使用者的 Gemini 1.5 Flash API ---
+        // --- 核心：精準對接您的 Gemini 1.5 Flash API ---
         window.callGemini = async function(promptText, isJson = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 Gemini API Key！"); return null; }
             
-            // 使用完全精準的 gemini-1.5-flash 模型端點
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+            // 精準對接 curl 裡面的 endpoint (gemini-1.5-flash-latest)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`;
             
             const body = {
                 contents: [{ parts: [{ text: promptText }] }]
@@ -264,7 +264,7 @@
                     method: 'POST', 
                     headers: { 
                         'Content-Type': 'application/json',
-                        'x-goog-api-key': apiKey // 按照 curl 標準使用 Header 傳遞金鑰
+                        'x-goog-api-key': apiKey // 依照您的 curl 使用 Header 傳遞金鑰
                     }, 
                     body: JSON.stringify(body) 
                 });
