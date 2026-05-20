@@ -101,7 +101,7 @@
 
     <header>
         <h1>🗼 東京終極 AI 行程管家</h1>
-        <p>Google Gemma 驅動 x 雲端即時同步</p>
+        <p>Gemini 1.5 驅動 x 雲端雙人同步</p>
     </header>
 
     <div class="container">
@@ -149,9 +149,9 @@
 
         <div id="tab-budget" class="tab-content">
             <div class="card" style="border: 2px solid var(--theme-teal);">
-                <div class="card-title">🔑 系統設定 (永久免費 API)</div>
-                <p class="detail">請輸入 OpenRouter API Key 以啟用免費 AI。金鑰僅保存在本機，絕不上傳雲端。</p>
-                <input type="password" id="api-key-input" class="currency-input" style="width:100%; margin-bottom:10px;" placeholder="sk-or-v1-...">
+                <div class="card-title">🔑 系統設定 (Gemini API)</div>
+                <p class="detail">請輸入 Google Gemini API Key。<b>⚠️ 注意：在香港使用時請確保已連線 VPN。</b></p>
+                <input type="password" id="api-key-input" class="currency-input" style="width:100%; margin-bottom:10px;" placeholder="AIzaSy...">
                 <button class="btn btn-map" style="width:100%; padding:10px; font-size:1rem;" onclick="saveApiKey()">💾 儲存金鑰至本機</button>
             </div>
 
@@ -231,53 +231,47 @@
             set(ref(db, 'wishlistData'), wishlistData).then(() => { document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)"; });
         };
 
-        // --- 核心：免費 OpenRouter API (強迫防呆版 + 更換為穩定 Gemma 模型) ---
-        window.callFreeAI = async function(promptText, isJson = false) {
-            const apiKey = localStorage.getItem('openrouter_api_key');
-            if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 OpenRouter API Key！"); return null; }
+        // --- 核心：Gemini API 引擎 ---
+        window.callGemini = async function(promptText, isJson = false) {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 Gemini API Key！\n\n(提示：香港用戶請全程開啟 VPN 以連接 Google 伺服器)"); return null; }
             
-            const url = `https://openrouter.ai/api/v1/chat/completions`;
-            const body = { 
-                // 替換成極度穩定且免費的 Google Gemma 2 模型
-                model: "google/gemma-2-9b-it:free", 
-                messages: [{ role: "user", content: promptText }] 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: { response_mime_type: isJson ? "application/json" : "text/plain" }
             };
 
             try {
                 const response = await fetch(url, { 
                     method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${apiKey}`,
-                        'HTTP-Referer': 'https://astorleung-glitch.github.io/tokyo-trip-app/',
-                        'X-Title': 'Tokyo Trip App'
-                    }, 
+                    headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify(body) 
                 });
-                if(!response.ok) { const errData = await response.json(); throw new Error(errData.error?.message || "伺服器無回應"); }
                 
                 const data = await response.json();
-                let resultText = data.choices[0].message.content;
-
-                // 防呆：免費模型有時會囉嗦，強制擷取 JSON 括號內的內容
-                if (isJson) {
-                    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) resultText = jsonMatch[0];
+                if(data.error) throw new Error(data.error.message);
+                
+                let resultText = data.candidates[0].content.parts[0].text;
+                
+                // 防呆處理 JSON 格式
+                if(isJson) {
+                    resultText = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
                 }
+                
                 return resultText;
-
             } catch (error) {
-                alert("API 請求失敗，請檢查金鑰。\n錯誤訊息：" + error.message);
+                alert("API 請求失敗，請檢查網路連線或金鑰。\n\n⚠️ 備註：香港地區必須使用 VPN 才能正常連線 Google API。\n\n錯誤訊息：" + error.message);
                 return null;
             }
         };
 
         window.saveApiKey = function() {
             const key = document.getElementById('api-key-input').value.trim();
-            if(key) { localStorage.setItem('openrouter_api_key', key); alert("✅ 金鑰已安全儲存於您的本機！免費 AI 功能已解鎖！"); }
+            if(key) { localStorage.setItem('gemini_api_key', key); alert("✅ 金鑰已安全儲存！香港使用者請確認手機已開啟 VPN，即可開始使用 AI 功能。"); }
         };
 
-        window.onload = () => { if(localStorage.getItem('openrouter_api_key')) document.getElementById('api-key-input').value = localStorage.getItem('openrouter_api_key'); };
+        window.onload = () => { if(localStorage.getItem('gemini_api_key')) document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key'); };
 
         // --- UI 操作 ---
         window.switchTab = function(tabId, element) {
@@ -337,21 +331,21 @@
             aiBox.style.display = "block"; aiBox.innerHTML = "<em>🤖 老饕思考中，為您搜尋周邊美食...</em>";
             
             const prompt = `你是一位東京在地老饕。請根據日本東京的『${eventName}』推薦三間走路 5 分鐘內的高 CP 值餐廳。請用繁體中文回答，格式直接給：1. 餐廳名稱 - 簡短特色。不要廢話，直接給重點。`;
-            const result = await window.callFreeAI(prompt);
+            const result = await window.callGemini(prompt);
             if(result) {
                 let formattedResult = result.replace(/(\d+\.\s)(.*?)(?=\s-)/g, `$1<a href="https://www.google.com/maps/dir/?api=1&origin=...$2" target="_blank" style="color:var(--theme-teal); font-weight:bold;">📍$2</a>`);
                 aiBox.innerHTML = `<strong>✨ 在地老饕推薦：</strong><br><div style="white-space: pre-wrap; margin-top:5px;">${formattedResult}</div>`;
-            } else { aiBox.innerHTML = "<em>API 請求失敗，請重試。</em>"; }
+            } else { aiBox.innerHTML = "<em>API 請求失敗，請重試並確認已開啟 VPN。</em>"; }
         };
 
         window.smartFitSchedule = async function() {
             let dest = prompt("想加入哪個新景點或餐廳？\n(例如：秋葉原、敘敘苑燒肉)");
             if (!dest) return;
             let simplifiedTrip = tripData.map((d, i) => { return { dayIndex: i, places: d.items.map(item => item.event).join(" -> ") }; });
-            const prompt = `行程表：${JSON.stringify(simplifiedTrip)}。我要額外安插新景點：「${dest}」。請根據地理位置判斷最適合安插在哪一天哪個位置。請務必只回傳純 JSON 格式 (包含 dayIdx, insertIdx, reason)，絕不允許任何 markdown 語法如 \`\`\`json：{"dayIdx": 0, "insertIdx": 1, "reason": "理由"}`;
+            const prompt = `行程表：${JSON.stringify(simplifiedTrip)}。我要額外安插新景點：「${dest}」。請根據地理位置判斷最適合安插在哪一天哪個位置。請務必只回傳純 JSON 格式 (包含 dayIdx, insertIdx, reason)：{"dayIdx": 0, "insertIdx": 1, "reason": "理由"}`;
 
-            alert("🤖 免費 AI 正在為您智慧排程，這需要幾秒鐘...");
-            const jsonStr = await window.callFreeAI(prompt, true);
+            alert("🤖 Gemini 正在為您智慧排程，請稍候...");
+            const jsonStr = await window.callGemini(prompt, true);
             if(jsonStr) {
                 try {
                     let aiDecision = JSON.parse(jsonStr);
@@ -367,9 +361,9 @@
             const input = document.getElementById('new-wishlist-input'); const dest = input.value.trim(); if(!dest) return;
             input.value = "🤖 正在為您搜尋網路資料..."; input.disabled = true;
             let simplifiedTrip = tripData.map(d => d.places).join(" | ");
-            const prompt = `請查詢東京「${dest}」的觀光資訊。這是我目前行程：${simplifiedTrip}。請務必只回傳純 JSON 格式，絕不允許任何 markdown 語法如 \`\`\`json：{"name": "${dest}","location": "地址或鄰近地鐵","phone": "電話","booking": "預約方式","remarks": "特別事項","bestDay": "推薦在 Day X 前往，因為..."}`;
+            const prompt = `請查詢東京「${dest}」的觀光資訊。這是我目前行程：${simplifiedTrip}。請務必只回傳純 JSON 格式：{"name": "${dest}","location": "地址或鄰近地鐵","phone": "電話","booking": "預約方式","remarks": "特別事項","bestDay": "推薦在 Day X 前往，因為..."}`;
 
-            const jsonStr = await window.callFreeAI(prompt, true);
+            const jsonStr = await window.callGemini(prompt, true);
             input.disabled = false; input.value = "";
             if(jsonStr) {
                 try {
