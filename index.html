@@ -101,7 +101,7 @@
 
     <header>
         <h1>🗼 東京終極 AI 行程管家</h1>
-        <p>永久免費 AI x 雲端即時同步</p>
+        <p>Google Gemma 驅動 x 雲端即時同步</p>
     </header>
 
     <div class="container">
@@ -231,14 +231,15 @@
             set(ref(db, 'wishlistData'), wishlistData).then(() => { document.getElementById('sync-status').innerHTML = "🟢 雲端同步中 (最新)"; });
         };
 
-        // --- 核心：免費 OpenRouter API (強迫防呆版) ---
+        // --- 核心：免費 OpenRouter API (強迫防呆版 + 更換為穩定 Gemma 模型) ---
         window.callFreeAI = async function(promptText, isJson = false) {
             const apiKey = localStorage.getItem('openrouter_api_key');
             if (!apiKey) { alert("🚨 請先前往「設定」分頁輸入 OpenRouter API Key！"); return null; }
             
             const url = `https://openrouter.ai/api/v1/chat/completions`;
             const body = { 
-                model: "meta-llama/llama-3.1-8b-instruct:free", // 使用 Meta 永久免費且強大的模型
+                // 替換成極度穩定且免費的 Google Gemma 2 模型
+                model: "google/gemma-2-9b-it:free", 
                 messages: [{ role: "user", content: promptText }] 
             };
 
